@@ -2,13 +2,14 @@ version: '2'
 
 services:
   cleaner:
-    command: "python cleaner.py"
+    command: "python src/cleaner.py"
     image: data.python3:1
     build:
       dockerfile: docker/python/Dockerfile
       context: ./
     volumes:
       - ./src:/opt/app
+      - ./samples:/opt/samples
 
   collector:
     command: "python collector.py"
