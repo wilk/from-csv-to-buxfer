@@ -1,15 +1,20 @@
 version: '2'
 
 services:
-  collector:
-    command: "python src/main.py"
-    image: collector.python3:1
+  cleaner:
+    command: "python cleaner.py"
+    image: data.python3:1
     build:
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/python/Dockerfile
       context: ./
-    ports:
-      - '8080:8080'
-    environment:
-      COLLECTOR_ENV: 'development'
+    volumes:
+      - ./src:/opt/app
+
+  collector:
+    command: "python collector.py"
+    image: data.python3:1
+    build:
+      dockerfile: docker/python/Dockerfile
+      context: ./
     volumes:
       - ./src:/opt/app
