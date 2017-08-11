@@ -103,3 +103,6 @@ ENV/
 .idea/
 
 data/
+pip-selfcheck.json
+include/
+bin/

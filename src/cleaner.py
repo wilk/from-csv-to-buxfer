@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! ./bin/python3
 
 '''
 Example of data to clean:
@@ -21,6 +21,11 @@ NAME_COLUMN = 3
 AMOUNT_COLUMN = 12
 
 import csv
+from pymongo import MongoClient
+
+client = MongoClient()
+print(client)
+
 with open('samples/expenses.csv') as expenses:
     reader = csv.reader(expenses, delimiter=',', quotechar='"')
     for row in reader:

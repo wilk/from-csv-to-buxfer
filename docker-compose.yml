@@ -1,21 +1,25 @@
 version: '2'
 
 services:
-  cleaner:
-    command: "python src/cleaner.py"
+  setup:
+    # just one command so the execution take place in the same context
+    command: bash -c "virtualenv . && source ./bin/activate && pip install -r requirements.txt"
     image: data.python3:1
     build:
       dockerfile: docker/python/Dockerfile
       context: ./
     volumes:
-      - ./src:/opt/app
-      - ./samples:/opt/samples
+      - ./:/opt/app
+
+  cleaner:
+    # activate the virtualenv before starting the cleaner
+    command: bash -c "source ./bin/activate && python src/cleaner.py"
+    image: data.python3:1
+    volumes:
+      - ./:/opt/app
 
   collector:
     command: "python collector.py"
     image: data.python3:1
-    build:
-      dockerfile: docker/python/Dockerfile
-      context: ./
     volumes:
       - ./src:/opt/app
