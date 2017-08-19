@@ -24,26 +24,33 @@ import csv
 import os
 from os import listdir
 from os.path import isfile, join
+import shutil
 
 SOURCE_FOLDER = os.path.abspath(os.getenv('SOURCE_FOLDER', 'samples'))
 CLEANED_FOLDER = os.path.abspath(os.getenv('CLEANED_FOLDER', 'cleaned'))
+
+# create the cleaned folder if not exists
+shutil.rmtree(CLEANED_FOLDER)
+os.makedirs(CLEANED_FOLDER)
+
+# read the csv files list
 csv_files = [f for f in listdir(SOURCE_FOLDER) if isfile(join(SOURCE_FOLDER, f))]
 
+# for each file, open it, read it and take just the most important rows from it
 for filename in csv_files:
   file_path = join(SOURCE_FOLDER, filename)
+  # open source csv file
   with open(file_path) as file:
+    print("reading", file_path)
+    # read source csv file
     reader = csv.reader(file, delimiter=',', quotechar='"')
     file_write_path = join(CLEANED_FOLDER, filename)
+    # create cleaned csv file
     with open(file_write_path, 'w+') as file_write:
+      print("writing", file_write_path)
       for row in reader:
+        # avoid useless rows
         if row[DATE_COLUMN]:
+          # write cleaned csv file
           writer = csv.writer(file_write, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-          print(row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN])
           writer.writerow([row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN]])
-
-
-        # with open('samples/expenses.csv') as expenses:
-        #    reader = csv.reader(expenses, delimiter=',', quotechar='"')
-        #    for row in reader:
-        #        if row[DATE_COLUMN]:
-        #            print(row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN])
