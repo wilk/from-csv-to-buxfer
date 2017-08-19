@@ -15,6 +15,9 @@ services:
     # activate the virtualenv before starting the cleaner
     command: bash -c "source ./bin/activate && python src/cleaner.py"
     image: data.python3:1
+    environment:
+      - CLEANED_FOLDER=cleaned
+      - SOURCE_FOLDER=data
     volumes:
       - ./:/opt/app
 

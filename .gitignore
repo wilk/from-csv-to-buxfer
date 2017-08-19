@@ -106,3 +106,5 @@ data/
 pip-selfcheck.json
 include/
 bin/
+cleaned/**/*
+!cleaned/README.md

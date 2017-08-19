@@ -21,13 +21,29 @@ NAME_COLUMN = 3
 AMOUNT_COLUMN = 12
 
 import csv
-from pymongo import MongoClient
+import os
+from os import listdir
+from os.path import isfile, join
 
-client = MongoClient()
-print(client)
+SOURCE_FOLDER = os.path.abspath(os.getenv('SOURCE_FOLDER', 'samples'))
+CLEANED_FOLDER = os.path.abspath(os.getenv('CLEANED_FOLDER', 'cleaned'))
+csv_files = [f for f in listdir(SOURCE_FOLDER) if isfile(join(SOURCE_FOLDER, f))]
 
-with open('samples/expenses.csv') as expenses:
-    reader = csv.reader(expenses, delimiter=',', quotechar='"')
-    for row in reader:
+for filename in csv_files:
+  file_path = join(SOURCE_FOLDER, filename)
+  with open(file_path) as file:
+    reader = csv.reader(file, delimiter=',', quotechar='"')
+    file_write_path = join(CLEANED_FOLDER, filename)
+    with open(file_write_path, 'w+') as file_write:
+      for row in reader:
         if row[DATE_COLUMN]:
-            print(row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN])
+          writer = csv.writer(file_write, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+          print(row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN])
+          writer.writerow([row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN]])
+
+
+        # with open('samples/expenses.csv') as expenses:
+        #    reader = csv.reader(expenses, delimiter=',', quotechar='"')
+        #    for row in reader:
+        #        if row[DATE_COLUMN]:
+        #            print(row[DATE_COLUMN], row[ACCOUNT_COLUMN], row[NAME_COLUMN], row[AMOUNT_COLUMN])
