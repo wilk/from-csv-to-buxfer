@@ -27,6 +27,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 import shutil
+import logging
 
 SOURCE_FOLDER = os.path.abspath(os.getenv('SOURCE_FOLDER', 'samples'))
 CLEANED_FOLDER = os.path.abspath(os.getenv('CLEANED_FOLDER', 'cleaned'))
@@ -43,13 +44,13 @@ for filename in csv_files:
   file_path = join(SOURCE_FOLDER, filename)
   # open source csv file
   with open(file_path) as file:
-    print("reading", file_path)
+    logging.info("reading", file_path)
     # read source csv file
     reader = csv.reader(file, delimiter=',', quotechar='"')
     file_write_path = join(CLEANED_FOLDER, filename)
     # create cleaned csv file
     with open(file_write_path, 'w+') as file_write:
-      print("writing", file_write_path)
+      logging.info("writing", file_write_path)
       for row in reader:
         # avoid useless rows
         if row[DATE_COLUMN]:

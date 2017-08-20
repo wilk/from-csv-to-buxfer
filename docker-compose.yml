@@ -17,12 +17,18 @@ services:
     image: data.python3:1
     environment:
       - CLEANED_FOLDER=cleaned
-      - SOURCE_FOLDER=data
+      - SOURCE_FOLDER=samples
     volumes:
       - ./:/opt/app
 
   collector:
-    command: "python collector.py"
+    # activate the virtualenv before starting the cleaner
+    command: bash -c "source ./bin/activate && python src/collector.py"
     image: data.python3:1
+    environment:
+      - CLEANED_FOLDER=cleaned
+      - TAGS_FILE=config/sample-tags.json
+      - EXPENSE_ACCOUNT=expenses
+      - INCOME_ACCOUNT=income
     volumes:
-      - ./src:/opt/app
+      - ./:/opt/app
