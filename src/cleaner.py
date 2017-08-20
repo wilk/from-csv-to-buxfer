@@ -13,6 +13,8 @@ Must become like this:
 Date	Account Name	Description	To Num.
 04/06/2016	Abbigliamento		maglietta 5
 
+This algorithm is meant for 2016 data only
+
 '''
 
 DATE_COLUMN = 0
