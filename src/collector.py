@@ -22,7 +22,6 @@ from os.path import isfile, join
 from pymongo import MongoClient
 from datetime import datetime
 import json
-import logging
 
 CLEANED_FOLDER = os.path.abspath(os.getenv('CLEANED_FOLDER', 'cleaned'))
 EXPENSE_ACCOUNT = os.getenv('EXPENSE_ACCOUNT', 'expenses')
@@ -30,11 +29,11 @@ INCOME_ACCOUNT = os.getenv('INCOME_ACCOUNT', 'income')
 TAGS_FILE = os.path.abspath(os.getenv('TAGS_FILE', 'config/sample-tags.json'))
 
 if not os.path.isdir(CLEANED_FOLDER):
-  logging.error('Launch the cleaner before the collector')
+  print('Launch the cleaner before the collector')
   sys.exit()
 
 # mongodb client
-client = MongoClient()
+client = MongoClient(host=os.getenv('DB_HOST'), port=int(os.getenv('DB_PORT')))
 db = client.collected
 
 # load tags mapping
@@ -48,7 +47,7 @@ for filename in csv_files:
   filepath = join(CLEANED_FOLDER, filename)
   account = EXPENSE_ACCOUNT if 'expenses' in filename else INCOME_ACCOUNT
   with open(filepath) as file:
-    logging.info("reading", filepath)
+    print("reading", filename)
     # read cleaned csv file
     reader = csv.reader(file, delimiter=',', quotechar='"')
     # skip headers
@@ -59,11 +58,12 @@ for filename in csv_files:
         "date": datetime.strptime(row[0], '%d/%m/%Y'),
         "account": account,
         "description": row[2],
-        "amount": float(row[3].replace(',', '.')),
+        # amount could be 20.000,54 and it needs to be converted like 20000.54
+        "amount": float(row[3].replace('.', '').replace(',', '.')),
         "tags": tags[filename][row[1]]
       })
 
-      db.insert_one(transaction)
+      #db.insert_one(transaction)
       transactions_counter += 1
     # log how transactions have been added
-    logging.info(transactions_counter, "transactions added from", filename, "as", account)
+    print(transactions_counter, "transactions added from", filename, "as", account)

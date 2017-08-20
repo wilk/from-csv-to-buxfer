@@ -30,5 +30,17 @@ services:
       - TAGS_FILE=config/sample-tags.json
       - EXPENSE_ACCOUNT=expenses
       - INCOME_ACCOUNT=income
+      - DB_HOST=mongodb
+      - DB_PORT=27017
     volumes:
       - ./:/opt/app
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:3.4
+    volumes:
+     - db_mongo:/data/db
+
+volumes:
+  db_mongo:
