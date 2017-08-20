@@ -48,13 +48,13 @@ EXPENSES_TAGS_MAP = {
 }
 
 EXPENSES_AUTO_TAGS_MAP = {
-  "Assicurazione": ["Abbigliamento", "Uscite/Mensili"],
-  "Benzina": ["Abbigliamento", "Uscite/Mensili"],
-  "Bollo": ["Abbigliamento", "Uscite/Mensili"],
-  "GPL": ["Abbigliamento", "Uscite/Mensili"],
-  "Parcheggio": ["Abbigliamento", "Uscite/Mensili"],
-  "Riparazioni e manutenzione": ["Abbigliamento", "Uscite/Mensili"],
-  "Varie": ["Abbigliamento", "Uscite/Mensili"]
+  "Assicurazione": ["Auto / Assicurazione", "Uscite / Annuali"],
+  "Benzina": ["Auto / Benzina", "Uscite / Mensili"],
+  "Bollo": ["Auto / Bollo", "Uscite / Mensili"],
+  "GPL": ["Auto / GPL", "Uscite / Mensili"],
+  "Parcheggio": ["Auto / Parcheggio", "Uscite / Mensili"],
+  "Riparazioni e manutenzione": ["Auto / Manutenzione", "Uscite / Annuali"],
+  "Varie": ["Auto / Varie", "Uscite / Straordinarie"]
 }
 
 if not os.path.isdir(CLEANED_FOLDER):
