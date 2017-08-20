@@ -27,23 +27,24 @@ EXPENSE_ACCOUNT = 'Uscite'
 INCOME_ACCOUNT = 'Entrate'
 
 EXPENSES_TAGS_MAP = {
-  "abbigliamento": ["Abbigliamento", "Uscite / Annuali"],
+  # nested tags need the following syntax: "<parent> / <child>"
+  "Abbigliamento": ["Abbigliamento", "Uscite / Annuali"],
   "Abbonamenti": ["Abbonamenti", "Uscite / Mensili"],
   "Alimentari": ["Spesa", "Uscite / Mensili"],
-  "Computer": ["Abbigliamento", "Uscite/Mensili"],
-  "Elettronica": ["Abbigliamento", "Uscite/Mensili"],
-  "Hobby": ["Abbigliamento", "Uscite/Mensili"],
-  "Igiene": ["Abbigliamento", "Uscite/Mensili"],
-  "Lavoro": ["Abbigliamento", "Uscite/Mensili"],
-  "Prestiti": ["Abbigliamento", "Uscite/Mensili"],
-  "Regali": ["Abbigliamento", "Uscite/Mensili"],
-  "Ristoranti": ["Abbigliamento", "Uscite/Mensili"],
-  "Servizi bancari": ["Abbigliamento", "Uscite/Mensili"],
-  "Servizi finanziari": ["Abbigliamento", "Uscite/Mensili"],
-  "Servizi Internet": ["Abbigliamento", "Uscite/Mensili"],
-  "Spese mediche": ["Abbigliamento", "Uscite/Mensili"],
-  "Telefono": ["Abbigliamento", "Uscite/Mensili"],
-  "Utensili": ["Abbigliamento", "Uscite/Mensili"]
+  "Computer": ["Elettronica", "Uscite / Annuali"],
+  "Elettronica": ["Elettronica", "Uscite / Annuali"],
+  "Hobby": ["Intrattenimento / Libri", "Uscite / Annuali"],
+  "Igiene": ["Estetica", "Uscite / Mensili"],
+  "Lavoro": ["Spese Lavoro / Wilk", "Uscite / Mensili"],
+  "Prestiti": ["Casa / Restituzione Prestito", "Uscite / Straordinarie"],
+  "Regali": ["Regali Effettuati", "Uscite / Annuali"],
+  "Ristoranti": ["Ristoranti Bar", "Uscite / Mensili"],
+  "Servizi bancari": ["Servizi Bancari", "Uscite / Mensili"],
+  "Servizi finanziari": ["Servizi Fiscali", "Uscite / Annuali"],
+  "Servizi Internet": ["Casa / Servizi / ADSL", "Uscite / Mensili"],
+  "Spese mediche": ["Spese Mediche", "Uscite / Mensili"],
+  "Telefono": ["Telefonia", "Uscite / Mensili"],
+  "Utensili": ["Utensili", "Uscite / Annuali"]
 }
 
 EXPENSES_AUTO_TAGS_MAP = {
