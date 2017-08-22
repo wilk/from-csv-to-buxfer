@@ -34,7 +34,10 @@ if not os.path.isdir(CLEANED_FOLDER):
 
 # mongodb client
 client = MongoClient(host=os.getenv('DB_HOST'), port=int(os.getenv('DB_PORT')))
-db = client.collected
+db = client.collector
+
+# empty the collected collection
+db.collected.delete_many({})
 
 # load tags mapping
 with open(TAGS_FILE) as json_file:
@@ -43,6 +46,8 @@ with open(TAGS_FILE) as json_file:
 # read the csv files list
 csv_files = [f for f in listdir(CLEANED_FOLDER) if isfile(join(CLEANED_FOLDER, f))]
 
+totalCounter = 0
+totalAmount = 0
 for filename in csv_files:
   filepath = join(CLEANED_FOLDER, filename)
   account = EXPENSE_ACCOUNT if 'expenses' in filename else INCOME_ACCOUNT
@@ -54,16 +59,35 @@ for filename in csv_files:
     next(reader, None)
     transactions_counter = 0
     for row in reader:
+      amount = float(row[3].replace('.', '').replace(',', '.').replace('-', ''))
+      totalAmount += amount
       transaction = dict({
         "date": datetime.strptime(row[0], '%d/%m/%Y'),
         "account": account,
         "description": row[2],
-        # amount could be 20.000,54 and it needs to be converted like 20000.54
-        "amount": float(row[3].replace('.', '').replace(',', '.')),
+        # amount could be -20.000,54 and it needs to be converted like 20000.54
+        # negative numbers are for income transactions: convert them into positive numbers
+        "amount": amount,
         "tags": tags[filename][row[1]]
       })
 
-      #db.insert_one(transaction)
+      db.collected.insert_one(transaction)
       transactions_counter += 1
     # log how transactions have been added
     print(transactions_counter, "transactions added from", filename, "as", account)
+    totalCounter += transactions_counter
+
+# test the collection
+collectionCounter = 0
+collectionAmount = 0
+cursor = db.collected.find()
+for document in cursor:
+  print(document)
+  collectionAmount += document['amount']
+  collectionCounter += 1
+
+assert totalCounter == collectionCounter
+assert totalAmount == collectionAmount
+
+print('inserted docs:', totalCounter, 'found docs:', collectionCounter)
+print('inserted amount:', totalAmount, 'found amount:', collectionAmount)
