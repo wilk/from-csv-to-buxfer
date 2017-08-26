@@ -1,6 +1,6 @@
 FROM python:3.6.2
 
-RUN pip install virtualenv
+RUN pip install "virtualenv==15.1.0"
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
