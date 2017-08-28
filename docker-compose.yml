@@ -32,6 +32,27 @@ services:
       - INCOME_ACCOUNT=income
       - DB_HOST=mongodb
       - DB_PORT=27017
+      - DB_NAME=collector
+      - DB_COLLECTION_NAME=collected
+    volumes:
+      - ./:/opt/app
+    depends_on:
+      - mongodb
+
+  goxfer:
+    command: go run src/goxfer.go
+    image: data.golang1.9:1
+    build:
+      dockerfile: docker/golang/Dockerfile
+      context: ./
+    environment:
+      - DB_HOST=mongodb
+      - DB_PORT=27017
+      - DB_NAME=collector
+      - DB_COLLECTION_NAME=collected
+      - BUXFER_API_ENDPOINT="https://www.buxfer.com/api/"
+      - BUXFER_USERNAME=your_buxfer_username
+      - BUXFER_PASSWORD=your_buxfer_password
     volumes:
       - ./:/opt/app
     depends_on:

@@ -110,3 +110,5 @@ cleaned/**/*
 !cleaned/README.md
 config/tags.json
 docker-compose.override.yml
+vendor
+.glide

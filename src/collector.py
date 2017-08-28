@@ -27,6 +27,8 @@ CLEANED_FOLDER = os.path.abspath(os.getenv('CLEANED_FOLDER', 'cleaned'))
 EXPENSE_ACCOUNT = os.getenv('EXPENSE_ACCOUNT', 'expenses')
 INCOME_ACCOUNT = os.getenv('INCOME_ACCOUNT', 'income')
 TAGS_FILE = os.path.abspath(os.getenv('TAGS_FILE', 'config/sample-tags.json'))
+DB_NAME = os.getenv('DB_NAME', 'collector')
+DB_COLLECTION_NAME = os.getenv('DB_COLLECTION_NAME', 'collected')
 
 if not os.path.isdir(CLEANED_FOLDER):
   print('Launch the cleaner before the collector')
@@ -34,10 +36,10 @@ if not os.path.isdir(CLEANED_FOLDER):
 
 # mongodb client
 client = MongoClient(host=os.getenv('DB_HOST'), port=int(os.getenv('DB_PORT')))
-db = client.collector
+db = client[DB_NAME]
 
 # empty the collected collection
-db.collected.delete_many({})
+db[DB_COLLECTION_NAME].delete_many({})
 
 # load tags mapping
 with open(TAGS_FILE) as json_file:
@@ -71,7 +73,7 @@ for filename in csv_files:
         "tags": tags[filename][row[1]]
       })
 
-      db.collected.insert_one(transaction)
+      db[DB_COLLECTION_NAME].insert_one(transaction)
       transactions_counter += 1
     # log how transactions have been added
     print(transactions_counter, "transactions added from", filename, "as", account)
@@ -80,7 +82,7 @@ for filename in csv_files:
 # test the collection
 collectionCounter = 0
 collectionAmount = 0
-cursor = db.collected.find()
+cursor = db[DB_COLLECTION_NAME].find()
 for document in cursor:
   print(document)
   collectionAmount += document['amount']
