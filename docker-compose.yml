@@ -1,7 +1,7 @@
 version: '2'
 
 services:
-  setup:
+  setup-python:
     # just one command so the execution take place in the same context
     command: bash -c "virtualenv . && source ./bin/activate && pip install -r requirements.txt"
     image: data.python3:1
@@ -39,12 +39,18 @@ services:
     depends_on:
       - mongodb
 
-  goxfer:
-    command: go run src/goxfer.go
+  setup-golang:
+    command: glide install
     image: data.golang1.9:1
     build:
       dockerfile: docker/golang/Dockerfile
       context: ./
+    volumes:
+      - ./:/opt/app
+
+  goxfer:
+    command: go run src/goxfer.go
+    image: data.golang1.9:1
     environment:
       - DB_HOST=mongodb
       - DB_PORT=27017
@@ -53,6 +59,11 @@ services:
       - BUXFER_API_ENDPOINT="https://www.buxfer.com/api/"
       - BUXFER_USERNAME=your_buxfer_username
       - BUXFER_PASSWORD=your_buxfer_password
+      - BULK_LENGHT=20
+      - EXPENSE_ACCOUNT=expenses
+      - INCOME_ACCOUNT=income
+      - EXPENSE_ACCOUNT_BUXFER=your_expense_account
+      - INCOME_ACCOUNT_BUXFER=your_income_account
     volumes:
       - ./:/opt/app
     depends_on:

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
 )
 
 type Transaction struct {
@@ -33,7 +35,46 @@ const (
 	BUXFER_API_URL = os.Getenv("BUXFER_API_ENDPOINT")
 	BUXFER_USERNAME = os.Getenv("BUXFER_USERNAME")
 	BUXFER_PASSWORD = os.Getenv("BUXFER_PASSWORD")
+	BULK_LEN = strconv.Atoi(os.Getenv("BULK_LENGHT"))
+	EXPENSE_ACCOUNT = os.Getenv("EXPENSE_ACCOUNT")
+	INCOME_ACCOUNT = os.Getenv("INCOME_ACCOUNT")
+	EXPENSE_ACCOUNT_BUXFER = os.Getenv("EXPENSE_ACCOUNT_BUXFER")
+	INCOME_ACCOUNT_BUXFER = os.Getenv("INCOME_ACCOUNT_BUXFER")
+	ACCOUNTS_MAP = map[string]string{EXPENSE_ACCOUNT: EXPENSE_ACCOUNT_BUXFER, INCOME_ACCOUNT: INCOME_ACCOUNT_BUXFER}
 )
+
+// @todo: define a working group as a new param
+func addTransaction(transaction Transaction) {
+	req, err := http.NewRequest("POST", BUXFER_API_URL + "/add_transaction", nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// @todo: make a test to insert a series of tags inside buxfer
+	// @todo: check date format
+	text := transaction.Description + " " + strconv.FormatFloat(transaction.Amount, "E", -1, 64) + " acct:" + ACCOUNTS_MAP[transaction.Account] + " tags:" + strings.Join(transaction.Tags[:], ",") + " date:" + transaction.Date
+
+	qs := req.URL.Query()
+	qs.Add("format", "sms")
+	qs.Add("text", text)
+
+	req.URL.RawQuery = qs.Encode()
+
+	// @todo: pass or globalize client
+	res, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	decoder := json.NewDecoder(res.Body)
+	// @todo: create an ad hoc structure for buxfer response body
+	var result LoginResponse
+	err = decoder.Decode(&result)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+}
 
 func main() {
 	session, err := mgo.Dial(DB_HOST)
@@ -87,9 +128,27 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for _, transaction := range results {
-		fmt.Println("Pushing transaction:", transaction.Description, ", account:", transaction.Account)
+	bulks := [][]Transaction{}
+	counter := 0
+	iterations := len(results) / BULK_LEN
+	for i := 0; i < iterations; i++ {
+		append(bulks, results[counter:BULK_LEN]...)
+		counter += BULK_LEN
+	}
 
-		// @todo: open 20 connections per time
+	if counter < len(iterations) {
+		append(bulks, results[counter:len(iterations) - counter]...)
+	}
+
+	for index, bulk := range bulks {
+		fmt.Println("Pushing bulk #", index)
+
+		for _, transaction := range bulk {
+			fmt.Println("Pushing transaction:", transaction.Description, ", account:", transaction.Account)
+
+			// @todo: call here addTransaction
+		}
+
+		// @todo: wait for working group to be done
 	}
 }
