@@ -11,6 +11,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Transaction struct {
@@ -28,6 +29,14 @@ type LoginResponse struct {
 	} `json:"response"`
 }
 
+type AddResponseBody struct {
+	Response struct {
+	  Status string `json:"status"`
+		TransactionAdded string `json:"transactionAdded"`
+		ParseStatus string `json:"parseStatus"`
+  } `json:"response"`
+}
+
 const (
 	DB_HOST = os.Getenv("DB_HOST")
 	DB_NAME = os.Getenv("DB_NAME")
@@ -43,11 +52,15 @@ const (
 	ACCOUNTS_MAP = map[string]string{EXPENSE_ACCOUNT: EXPENSE_ACCOUNT_BUXFER, INCOME_ACCOUNT: INCOME_ACCOUNT_BUXFER}
 )
 
-// @todo: define a working group as a new param
-func addTransaction(transaction Transaction) {
+// http token
+var token string
+
+func addTransaction(transaction Transaction) error {
+	client := &http.Client{}
+
 	req, err := http.NewRequest("POST", BUXFER_API_URL + "/add_transaction", nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// @todo: make a test to insert a series of tags inside buxfer
@@ -55,25 +68,30 @@ func addTransaction(transaction Transaction) {
 	text := transaction.Description + " " + strconv.FormatFloat(transaction.Amount, "E", -1, 64) + " acct:" + ACCOUNTS_MAP[transaction.Account] + " tags:" + strings.Join(transaction.Tags[:], ",") + " date:" + transaction.Date
 
 	qs := req.URL.Query()
+	qs.Add("token", token)
 	qs.Add("format", "sms")
 	qs.Add("text", text)
 
 	req.URL.RawQuery = qs.Encode()
 
-	// @todo: pass or globalize client
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	decoder := json.NewDecoder(res.Body)
-	// @todo: create an ad hoc structure for buxfer response body
-	var result LoginResponse
+	var result AddResponseBody
 	err = decoder.Decode(&result)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer res.Body.Close()
+
+	if result.Response.Status != "OK" || result.Response.TransactionAdded != true || result.Response.ParseStatus != "success" {
+		return errors.New("An error occurred during the transaction upload")
+	}
+
+	return nil
 }
 
 func main() {
@@ -119,8 +137,7 @@ func main() {
 		panic(errors.New("An error occured during the Buxfer's login"))
 	}
 
-	// @todo: use token for future requests
-	token := result.Response.Token
+	token = result.Response.Token
 
 	results := []Transaction{}
 	err = collected.Find(nil).All(&results)
@@ -140,15 +157,31 @@ func main() {
 		append(bulks, results[counter:len(iterations) - counter]...)
 	}
 
+	transactionAddedCounter := 0
+	transactionNotAddedCounter := 0
+	wg := &sync.WaitGroup{}
 	for index, bulk := range bulks {
 		fmt.Println("Pushing bulk #", index)
 
+		wg.Add(len(bulk))
 		for _, transaction := range bulk {
-			fmt.Println("Pushing transaction:", transaction.Description, ", account:", transaction.Account)
+			go func() {
+				fmt.Println("Pushing transaction:", transaction.Description, ", account:", transaction.Account)
 
-			// @todo: call here addTransaction
+				if err := addTransaction(transaction); err != nil {
+					transactionNotAddedCounter++
+					fmt.Println(err)
+				} else {
+					transactionAddedCounter++
+				}
+
+				wg.Done()
+			}()
 		}
 
-		// @todo: wait for working group to be done
+		wg.Wait()
 	}
+
+	fmt.Println("Transactions succeded #", strconv.Itoa(transactionAddedCounter))
+	fmt.Println("Transactions failed #", strconv.Itoa(transactionNotAddedCounter))
 }
