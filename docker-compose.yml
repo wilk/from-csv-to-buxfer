@@ -56,7 +56,7 @@ services:
       - DB_PORT=27017
       - DB_NAME=collector
       - DB_COLLECTION_NAME=collected
-      - BUXFER_API_ENDPOINT="https://www.buxfer.com/api/"
+      - BUXFER_API_ENDPOINT=https://www.buxfer.com/api
       - BUXFER_USERNAME=your_buxfer_username
       - BUXFER_PASSWORD=your_buxfer_password
       - BULK_LENGHT=20
