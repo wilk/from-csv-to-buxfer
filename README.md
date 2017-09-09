@@ -1,5 +1,5 @@
-# Economics Data Collector
-A personal economics data collector
+# From CSV to Buxfer
+This is a personal experiment where I'm pushing my personal economics data (CSV) to [Buxfer](https://www.buxfer.com) (through Buxfer APIs)
 
 ## Requirements
 
