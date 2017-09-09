@@ -6,6 +6,6 @@ RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
 # custom entrypoint
-COPY ./docker/python/entrypoint.sh /
+COPY ./docker/entrypoint.sh /
 RUN chmod 777 /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]

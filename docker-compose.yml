@@ -6,10 +6,10 @@ services:
     command: bash -c "virtualenv . && source ./bin/activate && pip install -r requirements.txt"
     image: data.python3:1
     build:
-      dockerfile: docker/python/Dockerfile
-      context: ./
+      dockerfile: docker/Dockerfile
+      context: ./python
     volumes:
-      - ./:/opt/app
+      - ./python:/opt/app
 
   cleaner:
     # activate the virtualenv before starting the cleaner
@@ -19,7 +19,7 @@ services:
       - CLEANED_FOLDER=cleaned
       - SOURCE_FOLDER=samples
     volumes:
-      - ./:/opt/app
+      - ./python:/opt/app
 
   collector:
     # activate the virtualenv before starting the cleaner
@@ -35,7 +35,7 @@ services:
       - DB_NAME=collector
       - DB_COLLECTION_NAME=collected
     volumes:
-      - ./:/opt/app
+      - ./python:/opt/app
     depends_on:
       - mongodb
 
@@ -43,10 +43,10 @@ services:
     command: glide install
     image: data.golang1.9:1
     build:
-      dockerfile: docker/golang/Dockerfile
-      context: ./
+      dockerfile: docker/Dockerfile
+      context: go
     volumes:
-      - ./:/opt/app
+      - ./go:/go/src/app
 
   goxfer:
     command: go run src/goxfer.go
@@ -65,14 +65,16 @@ services:
       - EXPENSE_ACCOUNT_BUXFER=your_expense_account
       - INCOME_ACCOUNT_BUXFER=your_income_account
     volumes:
-      - ./:/opt/app
+      - ./go:/go/src/app
     depends_on:
       - mongodb
 
   mongodb:
     image: mongo:3.4
+    ports:
+      - "27017:27017"
     volumes:
-     - db_mongo:/data/db
+     - db_mongo:/data/db:rw
 
 volumes:
   db_mongo:

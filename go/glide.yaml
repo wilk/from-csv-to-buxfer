@@ -1,0 +1,5 @@
+package: app
+import:
+- package: github.com/parnurzeal/gorequest
+  version: ~0.2.15
+- package: gopkg.in/mgo.v2

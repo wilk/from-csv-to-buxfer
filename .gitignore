@@ -102,13 +102,14 @@ ENV/
 
 .idea/
 
-data/
-pip-selfcheck.json
-include/
-bin/
-cleaned/**/*
-!cleaned/README.md
-config/tags.json
+python/data/
+python/pip-selfcheck.json
+python/include/
+python/bin/
+python/cleaned/**/*
+python/!cleaned/README.md
+python/config/tags.json
+python/lib
 docker-compose.override.yml
-vendor
-.glide
+go/vendor
+go/.glide

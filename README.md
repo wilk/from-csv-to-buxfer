@@ -14,9 +14,14 @@ Few simple steps:
 $ git clone https://github.com/wilk/economics-data-collector.git
 ```
 
-2. setup
+2. setup python
 ```bash
-$ docker-compose run --rm setup
+$ docker-compose run --rm setup-python
+```
+
+2. setup golang
+```bash
+$ docker-compose run --rm setup-golang
 ```
 
 ## Parsing data

@@ -2,20 +2,25 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"gopkg.in/mgo.v2"
-	"time"
+	//"gopkg.in/mgo.v2"
 	"os"
-	"net/http"
-	"encoding/json"
+	//"net/http"
+	//"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
-	"sync"
+	//"sync"
+	"github.com/parnurzeal/gorequest"
+	//"log"
+	//"sync"
+	//"net/http"
+	//"encoding/json"
+	//"sync"
+	//"time"
 )
 
 type Transaction struct {
-	Date time.Time
+	Date string
 	Account string
 	Description string
 	Amount float64
@@ -32,47 +37,85 @@ type LoginResponse struct {
 type AddResponseBody struct {
 	Response struct {
 	  Status string `json:"status"`
-		TransactionAdded string `json:"transactionAdded"`
+		TransactionAdded bool `json:"transactionAdded"`
 		ParseStatus string `json:"parseStatus"`
   } `json:"response"`
 }
 
-const (
+var (
 	DB_HOST = os.Getenv("DB_HOST")
 	DB_NAME = os.Getenv("DB_NAME")
 	DB_COLLECTION_NAME = os.Getenv("DB_COLLECTION_NAME")
 	BUXFER_API_URL = os.Getenv("BUXFER_API_ENDPOINT")
 	BUXFER_USERNAME = os.Getenv("BUXFER_USERNAME")
 	BUXFER_PASSWORD = os.Getenv("BUXFER_PASSWORD")
-	BULK_LEN = strconv.Atoi(os.Getenv("BULK_LENGHT"))
+	BULK_LEN, _ = strconv.Atoi(os.Getenv("BULK_LENGHT"))
 	EXPENSE_ACCOUNT = os.Getenv("EXPENSE_ACCOUNT")
 	INCOME_ACCOUNT = os.Getenv("INCOME_ACCOUNT")
 	EXPENSE_ACCOUNT_BUXFER = os.Getenv("EXPENSE_ACCOUNT_BUXFER")
 	INCOME_ACCOUNT_BUXFER = os.Getenv("INCOME_ACCOUNT_BUXFER")
-	ACCOUNTS_MAP = map[string]string{EXPENSE_ACCOUNT: EXPENSE_ACCOUNT_BUXFER, INCOME_ACCOUNT: INCOME_ACCOUNT_BUXFER}
+	EXPENSE_TYPE = os.Getenv("EXPENSE_TYPE")
+	INCOME_TYPE = os.Getenv("INCOME_TYPE")
+	EXPENSE_ACCOUNT_ID = os.Getenv("EXPENSE_ACCOUNT_ID")
+	INCOME_ACCOUNT_ID = os.Getenv("INCOME_ACCOUNT_ID")
+	AUTH_TOKEN= os.Getenv("AUTH_TOKEN")
 )
 
 // http token
 var token string
 
 func addTransaction(transaction Transaction) error {
-	client := &http.Client{}
-
-	req, err := http.NewRequest("POST", BUXFER_API_URL + "/add_transaction", nil)
-	if err != nil {
-		return err
-	}
+	request := gorequest.New()
 
 	// @todo: make a test to insert a series of tags inside buxfer
-	// @todo: check date format
-	text := transaction.Description + " " + strconv.FormatFloat(transaction.Amount, "E", -1, 64) + " acct:" + ACCOUNTS_MAP[transaction.Account] + " tags:" + strings.Join(transaction.Tags[:], ",") + " date:" + transaction.Date
+	/*text := transaction.Description + " " + strconv.FormatFloat(transaction.Amount, 'f', -1, 64) + " acct:" + transaction.Account + " tags:" + strings.Join(transaction.Tags[:], ",") + " date:" + transaction.Date
 
-	qs := req.URL.Query()
+	var body AddResponseBody*/
+	reqBody := make(map[string]string)
+	reqBody["transType"] = INCOME_TYPE
+	reqBody["description"] = transaction.Description
+	reqBody["amount"] = strconv.FormatFloat(transaction.Amount, 'f', -1, 64)
+	reqBody["date"] = transaction.Date
+	reqBody["accountId"] = INCOME_ACCOUNT_ID
+	reqBody["tags"] = strings.Join(transaction.Tags[:], ",")
+	reqBody["__authToken"] = AUTH_TOKEN
+	fmt.Println(reqBody)
+	res, _, errs := request.Post(BUXFER_API_URL + "/transaction/add").
+		Type("multipart").
+		Send(reqBody).
+		End()
+		//Query("token=" + token).
+		//Query("format=sms").
+		//Query("text=" + text).
+		//EndStruct(&body)
+
+	if len(errs) > 0 {
+		return errors.New("problem on post")
+	}
+
+	if res.StatusCode > 399 {
+		return errors.New(res.Status)
+	}
+
+	fmt.Println(BUXFER_API_URL + "/transaction/add")
+
+	/*fmt.Println(text)
+	fmt.Println(body)
+
+	if body.Response.Status != "OK" || !body.Response.TransactionAdded || body.Response.ParseStatus != "success" {
+		return errors.New("An error occurred during the transaction upload")
+	}*/
+
+	/*qs := req.URL.Query()
 	qs.Add("token", token)
+
+	// @todo: JSON payload, dude
 	qs.Add("format", "sms")
 	qs.Add("text", text)
 
 	req.URL.RawQuery = qs.Encode()
+
+	fmt.Println(req.URL.String())
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -87,14 +130,78 @@ func addTransaction(transaction Transaction) error {
 	}
 	defer res.Body.Close()
 
-	if result.Response.Status != "OK" || result.Response.TransactionAdded != true || result.Response.ParseStatus != "success" {
+	if result.Response.Status != "OK" || !result.Response.TransactionAdded || result.Response.ParseStatus != "success" {
 		return errors.New("An error occurred during the transaction upload")
-	}
+	}*/
 
 	return nil
 }
 
 func main() {
+	/*client := &http.Client{}
+	fmt.Println(BUXFER_API_URL + "/login")
+	req, err := http.NewRequest("GET", BUXFER_API_URL + "/login", nil)
+	if err != nil {
+		panic(err)
+	}
+
+	qs := req.URL.Query()
+	qs.Add("userid", BUXFER_USERNAME)
+	qs.Add("password", BUXFER_PASSWORD)
+
+	req.URL.RawQuery = qs.Encode()
+
+	fmt.Println(req.URL.String())
+
+	res, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	decoder := json.NewDecoder(res.Body)
+	var result LoginResponse
+	err = decoder.Decode(&result)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	if result.Response.Status != "OK" || len(result.Response.Token) == 0 {
+		panic(errors.New("An error occured during the Buxfer's login"))
+	}
+
+	fmt.Println("Buxfer session created!")
+
+	token = result.Response.Token*/
+
+	request := gorequest.New()
+	res, _, errs := request.Post(BUXFER_API_URL + "/login").
+		Type("urlencoded").
+		Query("username=" + BUXFER_USERNAME).
+		Query("password=" + BUXFER_PASSWORD).
+		End()
+
+	if len(errs) > 0 {
+		fmt.Println(errs)
+		return
+	}
+
+	if res.StatusCode > 399 {
+		fmt.Println(res.Status)
+		return
+	}
+
+	fmt.Println(res)
+	return
+
+	transaction := Transaction{Date: "2016/01/02", Account: "Entrate", Description: "Test", Amount: 25.52, Tags: []string{"Abbigliamento", "Uscite / Annuali"}}
+	fmt.Println(transaction)
+	if err := addTransaction(transaction); err != nil {
+		fmt.Println(err)
+	}
+}
+
+/*func main() {
 	session, err := mgo.Dial(DB_HOST)
 	if err != nil {
 		panic(err)
@@ -137,6 +244,9 @@ func main() {
 		panic(errors.New("An error occured during the Buxfer's login"))
 	}
 
+	fmt.Println("Buxfer session created!")
+	fmt.Println("Fetching transactions from DB...")
+
 	token = result.Response.Token
 
 	results := []Transaction{}
@@ -156,6 +266,9 @@ func main() {
 	if counter < len(iterations) {
 		append(bulks, results[counter:len(iterations) - counter]...)
 	}
+
+	fmt.Println("Transactions fetched and divided into small bulk of #", strconv.Itoa(BULK_LEN), "transactions")
+	fmt.Println("Pushing transactions on Buxfer...")
 
 	transactionAddedCounter := 0
 	transactionNotAddedCounter := 0
@@ -184,4 +297,4 @@ func main() {
 
 	fmt.Println("Transactions succeded #", strconv.Itoa(transactionAddedCounter))
 	fmt.Println("Transactions failed #", strconv.Itoa(transactionNotAddedCounter))
-}
+}*/
