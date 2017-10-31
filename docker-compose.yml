@@ -62,8 +62,6 @@ services:
       - BULK_LENGHT=20
       - EXPENSE_ACCOUNT=expenses
       - INCOME_ACCOUNT=income
-      - EXPENSE_ACCOUNT_BUXFER=your_expense_account
-      - INCOME_ACCOUNT_BUXFER=your_income_account
     volumes:
       - ./go:/go/src/app
     depends_on:

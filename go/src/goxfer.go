@@ -27,11 +27,20 @@ type LoginResponse struct {
 	} `json:"response"`
 }
 
+type AccountsListResponse struct {
+	Response struct {
+		Accounts []struct {
+			Id int `json:"id"`
+			Name string `json:"name"`
+		} `json:"accounts"`
+		Status string `json:"status"`
+		Token string `json:"token"`
+	} `json:"response"`
+}
+
 type AddResponseBody struct {
 	Response struct {
 	  Status string `json:"status"`
-		TransactionAdded bool `json:"transactionAdded"`
-		ParseStatus string `json:"parseStatus"`
   } `json:"response"`
 }
 
@@ -43,28 +52,37 @@ var (
 	BUXFER_USERNAME = os.Getenv("BUXFER_USERNAME")
 	BUXFER_PASSWORD = os.Getenv("BUXFER_PASSWORD")
 	BULK_LEN, _ = strconv.Atoi(os.Getenv("BULK_LENGHT"))
-	EXPENSE_ACCOUNT = os.Getenv("EXPENSE_ACCOUNT")
-	INCOME_ACCOUNT = os.Getenv("INCOME_ACCOUNT")
 	EXPENSE_ACCOUNT_BUXFER = os.Getenv("EXPENSE_ACCOUNT_BUXFER")
-	INCOME_ACCOUNT_BUXFER = os.Getenv("INCOME_ACCOUNT_BUXFER")
+	EXPENSE_ACCOUNT_ID int
+	INCOME_ACCOUNT_ID int
 )
 
 func addTransaction(transaction Transaction, token string) error {
 	request := gorequest.New()
 
-	// text must follow this pattern:
-	// <description> [+]<amount> acct:<account> tags:<tag1,tag2,...> date:<date>
-	amount := strconv.FormatFloat(transaction.Amount, 'f', -1, 64)
-	if transaction.Account == INCOME_ACCOUNT_BUXFER {
-		amount = "+" + amount
+	accountId := INCOME_ACCOUNT_ID
+	accountType := "income"
+	if transaction.Account == EXPENSE_ACCOUNT_BUXFER {
+		accountId = EXPENSE_ACCOUNT_ID
+		accountType = "expense"
 	}
-	text := transaction.Description + " " + amount + " acct:" + transaction.Account + " tags:" + strings.Join(transaction.Tags[:], ",") + " date:" + transaction.Date
+
+	dates := strings.Split(transaction.Date, "/")
+	date := dates[2] + "-" + dates[1] + "-" + dates[0]
+
+	payload := map[string]interface{}{
+		"description": transaction.Description,
+		"amount": transaction.Amount,
+		"accountId": accountId,
+		"tags": strings.Join(transaction.Tags[:], ","),
+		"date": date,
+		"token": token,
+		"type": accountType,
+	}
 
 	var body AddResponseBody
-	res, _, errs := request.Post(BUXFER_API_URL + "/transaction/add").
-		Query("token=" + token).
-		Query("format=sms").
-		Query("text=" + text).
+	res, _, errs := request.Post(BUXFER_API_URL + "/add_transaction").
+		Send(payload).
 		EndStruct(&body)
 
 	if len(errs) > 0 {
@@ -75,7 +93,7 @@ func addTransaction(transaction Transaction, token string) error {
 		return errors.New(res.Status)
 	}
 
-	if body.Response.Status != "OK" || !body.Response.TransactionAdded || body.Response.ParseStatus != "success" {
+	if body.Response.Status != "OK" {
 		return errors.New("An error occurred during the transaction upload")
 	}
 
@@ -115,10 +133,38 @@ func main() {
 		panic(errors.New("An error occured during the Buxfer's login"))
 	}
 
-	fmt.Println("Buxfer session created!")
-	fmt.Println("Fetching transactions from DB...")
-
 	token := result.Response.Token
+
+	fmt.Println("Buxfer session created!")
+	fmt.Println("Fetching Buxfer's accounts list...")
+
+	var listResult AccountsListResponse
+	res, _, errs = request.Get(BUXFER_API_URL + "/accounts").
+		Query("token=" + token).
+		EndStruct(&listResult)
+
+	if len(errs) > 0 {
+		panic(errs)
+	}
+
+	if res.StatusCode > 399 {
+		panic(res.Status)
+	}
+
+	if listResult.Response.Status != "OK" || len(listResult.Response.Accounts) == 0 {
+		panic(errors.New("An error occured when fetching the Buxfer accounts list"))
+	}
+
+	for _, account := range listResult.Response.Accounts {
+		if account.Name == EXPENSE_ACCOUNT_BUXFER {
+			EXPENSE_ACCOUNT_ID = account.Id
+		} else {
+			INCOME_ACCOUNT_ID = account.Id
+		}
+	}
+
+	fmt.Println("Accounts list fetched!")
+	fmt.Println("Fetching transactions from DB...")
 
 	results := []Transaction{}
 	err = collected.Find(nil).All(&results)
@@ -130,12 +176,12 @@ func main() {
 	counter := 0
 	iterations := len(results) / BULK_LEN
 	for i := 0; i < iterations; i++ {
-		append(bulks, results[counter:BULK_LEN]...)
+		bulks = append(bulks, results[counter:counter + BULK_LEN])
 		counter += BULK_LEN
 	}
 
-	if counter < len(iterations) {
-		append(bulks, results[counter:len(iterations) - counter]...)
+	if counter < iterations {
+		bulks = append(bulks, results[counter:iterations - counter])
 	}
 
 	fmt.Println("Transactions fetched and divided into small bulk of #", strconv.Itoa(BULK_LEN), "transactions")
@@ -150,8 +196,8 @@ func main() {
 		wg.Add(len(bulk))
 		for _, transaction := range bulk {
 			// going parallel
-			go func() {
-				fmt.Println("Pushing transaction:", transaction.Description, ", account:", transaction.Account)
+			go func(transaction Transaction) {
+				fmt.Println("Pushing transaction:", transaction)
 
 				if err := addTransaction(transaction, token); err != nil {
 					transactionNotAddedCounter++
@@ -161,7 +207,7 @@ func main() {
 				}
 
 				wg.Done()
-			}()
+			}(transaction)
 		}
 
 		// wait the end of each request of the current bulk
