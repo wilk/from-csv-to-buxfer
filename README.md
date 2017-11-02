@@ -24,5 +24,18 @@ $ docker-compose run --rm setup-python
 $ docker-compose run --rm setup-golang
 ```
 
-## Parsing data
-@todo
+## Usage
+1. cleaning data
+```bash
+$ docker-compose run --rm cleaner
+```
+
+2. collecting data
+```bash
+$ docker-compose run --rm collector
+```
+
+3. pushing data
+```bash
+$ docker-compose run --rm goxfer
+```
