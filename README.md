@@ -14,12 +14,17 @@ Few simple steps:
 $ git clone https://github.com/wilk/economics-data-collector.git
 ```
 
-2. setup python
+2. build images
+```bash
+$ docker-compose build
+```
+
+3. setup python
 ```bash
 $ docker-compose run --rm setup-python
 ```
 
-2. setup golang
+4. setup golang
 ```bash
 $ docker-compose run --rm setup-golang
 ```
