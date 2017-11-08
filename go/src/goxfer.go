@@ -9,7 +9,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"gopkg.in/mgo.v2"
 	"sync"
-	"log"
 )
 
 type Transaction struct {
@@ -169,7 +168,7 @@ func main() {
 	results := []Transaction{}
 	err = collected.Find(nil).All(&results)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	bulks := [][]Transaction{}

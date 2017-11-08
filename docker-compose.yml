@@ -53,7 +53,6 @@ services:
     image: data.golang1.9:1
     environment:
       - DB_HOST=mongodb
-      - DB_PORT=27017
       - DB_NAME=collector
       - DB_COLLECTION_NAME=collected
       - BUXFER_API_ENDPOINT=https://www.buxfer.com/api
