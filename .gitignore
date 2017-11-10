@@ -103,13 +103,16 @@ ENV/
 .idea/
 
 python/data/
+python/blackmesa-data/
 python/pip-selfcheck.json
 python/include/
 python/bin/
 python/cleaned/**/*
 python/!cleaned/README.md
 python/config/tags.json
+python/config/blackmesa-tags.json
 python/lib
 docker-compose.override.yml
+docker-compose.blackmesa.yml
 go/vendor
 go/.glide
