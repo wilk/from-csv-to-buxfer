@@ -59,8 +59,8 @@ services:
       - BUXFER_USERNAME=your_buxfer_username
       - BUXFER_PASSWORD=your_buxfer_password
       - BULK_LENGHT=20
-      - EXPENSE_ACCOUNT=expenses
-      - INCOME_ACCOUNT=income
+      - EXPENSE_ACCOUNT_BUXFER=expenses
+      - INCOME_ACCOUNT_BUXFER=income
     volumes:
       - ./go:/go/src/app
     depends_on:
