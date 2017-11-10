@@ -1,3 +1,4 @@
+"Date","Account Name","Number","Description","Notes","Memo","Category","Type","Action","Reconcile","To With Sym","From With Sym","To Num.","From Num.","To Rate/Price","From Rate/Price"
 "04/06/2016","Abbigliamento","","maglietta","","","Sbilancio-EUR","T","","N","€ 5,00","","5,00","","",""
 "","","","","","","Abbigliamento","S","","N","€ 5,00","","5,00","","1,00",""
 "","","","","","","Sbilancio-EUR","S","","N","","-€ 5,00","","-5,00","","1,00"
