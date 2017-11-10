@@ -50,7 +50,6 @@ csv_files = [f for f in listdir(CLEANED_FOLDER) if isfile(join(CLEANED_FOLDER, f
 
 total_counter = 0
 total_amount = 0
-total_amount = 0
 for filename in csv_files:
   filepath = join(CLEANED_FOLDER, filename)
   account = EXPENSE_ACCOUNT if 'expenses' in filename else INCOME_ACCOUNT
