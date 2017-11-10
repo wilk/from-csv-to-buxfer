@@ -9,9 +9,11 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"gopkg.in/mgo.v2"
 	"sync"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Transaction struct {
+	Id bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Date string
 	Account string
 	Description string
@@ -173,14 +175,15 @@ func main() {
 
 	bulks := [][]Transaction{}
 	counter := 0
-	iterations := len(results) / BULK_LEN
+	resultsLen := len(results)
+	iterations := resultsLen / BULK_LEN
 	for i := 0; i < iterations; i++ {
 		bulks = append(bulks, results[counter:counter + BULK_LEN])
 		counter += BULK_LEN
 	}
 
-	if counter < iterations {
-		bulks = append(bulks, results[counter:iterations - counter])
+	if counter < resultsLen {
+		bulks = append(bulks, results[counter:])
 	}
 
 	fmt.Println("Transactions fetched and divided into small bulk of #", strconv.Itoa(BULK_LEN), "transactions")
@@ -188,6 +191,7 @@ func main() {
 
 	transactionAddedCounter := 0
 	transactionNotAddedCounter := 0
+	var transactionIdNotAdded []bson.ObjectId
 	wg := &sync.WaitGroup{}
 	for index, bulk := range bulks {
 		fmt.Println("Pushing bulk #", index)
@@ -200,6 +204,7 @@ func main() {
 
 				if err := addTransaction(transaction, token); err != nil {
 					transactionNotAddedCounter++
+					transactionIdNotAdded = append(transactionIdNotAdded, transaction.Id)
 					fmt.Println(err)
 				} else {
 					transactionAddedCounter++
@@ -214,5 +219,11 @@ func main() {
 	}
 
 	fmt.Println("Transactions succeded #", strconv.Itoa(transactionAddedCounter))
-	fmt.Println("Transactions failed #", strconv.Itoa(transactionNotAddedCounter))
+	fmt.Println("Transactions failed #", strconv.Itoa(transactionNotAddedCounter), strconv.Itoa(len(transactionIdNotAdded)))
+	if len(transactionIdNotAdded) > 0 {
+		fmt.Println("Transactions failed listed below:")
+		for _, id := range transactionIdNotAdded {
+			fmt.Println(id)
+		}
+	}
 }
