@@ -48,8 +48,9 @@ with open(TAGS_FILE) as json_file:
 # read the csv files list
 csv_files = [f for f in listdir(CLEANED_FOLDER) if isfile(join(CLEANED_FOLDER, f))]
 
-totalCounter = 0
-totalAmount = 0
+total_counter = 0
+total_amount = 0
+total_amount = 0
 for filename in csv_files:
   filepath = join(CLEANED_FOLDER, filename)
   account = EXPENSE_ACCOUNT if 'expenses' in filename else INCOME_ACCOUNT
@@ -62,7 +63,7 @@ for filename in csv_files:
     transactions_counter = 0
     for row in reader:
       amount = float(row[3].replace('.', '').replace(',', '.').replace('-', ''))
-      totalAmount += amount
+      total_amount += amount
       transaction = dict({
         "date": row[0],
         "account": account,
@@ -77,19 +78,19 @@ for filename in csv_files:
       transactions_counter += 1
     # log how transactions have been added
     print(transactions_counter, "transactions added from", filename, "as", account)
-    totalCounter += transactions_counter
+    total_counter += transactions_counter
 
 # test the collection
-collectionCounter = 0
-collectionAmount = 0
+collection_counter = 0
+collection_amount = 0
 cursor = db[DB_COLLECTION_NAME].find()
 for document in cursor:
   print(document)
-  collectionAmount += document['amount']
-  collectionCounter += 1
+  collection_amount += document['amount']
+  collection_counter += 1
 
-assert totalCounter == collectionCounter
-assert totalAmount == collectionAmount
+assert total_counter == collection_counter
+assert total_amount == collection_amount
 
-print('inserted docs:', totalCounter, 'found docs:', collectionCounter)
-print('inserted amount:', totalAmount, 'found amount:', collectionAmount)
+print('inserted docs:', total_counter, 'found docs:', collection_counter)
+print('inserted amount:', total_amount, 'found amount:', collection_amount)
